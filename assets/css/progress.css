@@ -1,0 +1,43 @@
+.p5 {
+    clear: both;
+    margin-top: 16px;
+  }
+  .p5 progress {
+    text-align: left;
+    overflow: hidden;
+  }
+  .p5 progress::-webkit-progress-bar,
+  .p5 progress::-webkit-progress-value {
+    background: white;
+  }
+  .p5 progress::before {
+    content: "";
+    width: 10000%;
+    height: 18px;
+    position: absolute;
+    background: linear-gradient(-45deg, transparent 33%, #BA68C8 33%, #BA68C8 66%, transparent 66%);
+    background-size: 40px 20px;
+    -webkit-animation: shift 200s linear infinite;
+            animation: shift 200s linear infinite;
+  }
+  @-webkit-keyframes expand {
+    0%, 80%, 100% {
+      box-shadow: 0 0 #90A4AE;
+      height: 48px;
+    }
+    40% {
+      box-shadow: 0 -22px #90A4AE;
+      height: 58px;
+    }
+  }
+  
+  @keyframes expand {
+    0%, 80%, 100% {
+      box-shadow: 0 0 #90A4AE;
+      height: 48px;
+    }
+    40% {
+      box-shadow: 0 -22px #90A4AE;
+      height: 58px;
+    }
+  }  
