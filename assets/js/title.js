@@ -1,140 +1,348 @@
-let particles = [];
-let frequency = 20;
-// Popolate particles
-setInterval(
-function () {
-  popolate();
-}.bind(this),
-frequency);
+import * as THREE from 'three';
 
+import Stats from 'three/addons/libs/stats.module.js';
 
-let c1 = createCanvas({ width: $(window).width(), height: $(window).height() });
-let c2 = createCanvas({ width: $(window).width(), height: $(window).height() });
-let c3 = createCanvas({ width: $(window).width(), height: $(window).height() });
+import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import { ShadowMapViewer } from 'three/addons/utils/ShadowMapViewer.js';
 
-let tela = c1.canvas;
-let canvas = c1.context;
+const SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 1024;
 
-// $("body").append(tela);
-$("#home").append(c3.canvas);
-writeText(c2.canvas, c2.context, "SMILEWEBMASTER\n\nFullstack Developer");
+let SCREEN_WIDTH = window.innerWidth;
+let SCREEN_HEIGHT = window.innerHeight;
+const FLOOR = - 250;
 
+let camera, controls, scene, renderer;
+let container, stats;
 
-class Particle {
-  constructor(canvas, options) {
-    let random = Math.random();
-    this.canvas = canvas;
-    this.x = options.x;
-    this.y = options.y;
-    this.s = 3 + Math.random();
-    this.a = 0;
-    this.w = $(window).width();
-    this.h = $(window).height();
-    this.radius = 0.5 + Math.random() * 20;
-    this.color = this.radius > 5 ? "#FF5E4C" : "#ED413C"; //this.randomColor()
+const NEAR = 10, FAR = 3000;
+
+let mixer;
+
+const morphs = [];
+
+let light;
+let lightShadowMapViewer;
+
+const clock = new THREE.Clock();
+
+let showHUD = false;
+
+init();
+animate();
+
+function init() {
+
+  // container = document.createElement( 'div' );
+  const container = document.querySelector('#threejs');
+  document.body.appendChild( container );
+
+  // CAMERA
+
+  camera = new THREE.PerspectiveCamera( 23, SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR );
+  camera.position.set( 700, 50, 1900 );
+
+  // SCENE
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color( 0x59472b );
+  scene.fog = new THREE.Fog( 0x59472b, 1000, FAR );
+
+  // LIGHTS
+
+  const ambient = new THREE.AmbientLight( 0x444444 );
+  scene.add( ambient );
+
+  light = new THREE.SpotLight( 0xffffff, 1, 0, Math.PI / 5, 0.3 );
+  light.position.set( 0, 1500, 1000 );
+  light.target.position.set( 0, 0, 0 );
+
+  light.castShadow = true;
+  light.shadow.camera.near = 1200;
+  light.shadow.camera.far = 2500;
+  light.shadow.bias = 0.0001;
+
+  light.shadow.mapSize.width = SHADOW_MAP_WIDTH;
+  light.shadow.mapSize.height = SHADOW_MAP_HEIGHT;
+
+  scene.add( light );
+
+  createHUD();
+  createScene();
+
+  // RENDERER
+
+  renderer = new THREE.WebGLRenderer( { antialias: true } );
+  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+  container.appendChild( renderer.domElement );
+
+  renderer.autoClear = false;
+
+  //
+
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
+
+  // CONTROLS
+
+  controls = new FirstPersonControls( camera, renderer.domElement );
+
+  controls.lookSpeed = 0.0125;
+  controls.movementSpeed = 500;
+  controls.noFly = false;
+  controls.lookVertical = true;
+
+  controls.lookAt( scene.position );
+
+  // STATS
+
+  stats = new Stats();
+  //container.appendChild( stats.dom );
+
+  //
+
+  window.addEventListener( 'resize', onWindowResize );
+  window.addEventListener( 'keydown', onKeyDown );
+
+}
+
+function onWindowResize() {
+
+  SCREEN_WIDTH = window.innerWidth;
+  SCREEN_HEIGHT = window.innerHeight;
+
+  camera.aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+
+  controls.handleResize();
+
+}
+
+function onKeyDown( event ) {
+
+  switch ( event.keyCode ) {
+
+    case 84:	/*t*/
+      showHUD = ! showHUD;
+      break;
+
   }
 
-  randomColor() {
-    let colors = ["#FF5E4C", "#FFFFFF"];
-    return colors[this.randomIntFromInterval(0, colors.length - 1)];
-  }
+}
 
-  randomIntFromInterval(min, max) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
-  }
+function createHUD() {
 
-  render() {
-    this.canvas.beginPath();
-    this.canvas.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-    this.canvas.lineWidth = 2;
-    this.canvas.fillStyle = this.color;
-    this.canvas.fill();
-    this.canvas.closePath();
-  }
+  lightShadowMapViewer = new ShadowMapViewer( light );
+  lightShadowMapViewer.position.x = 10;
+  lightShadowMapViewer.position.y = SCREEN_HEIGHT - ( SHADOW_MAP_HEIGHT / 4 ) - 10;
+  lightShadowMapViewer.size.width = SHADOW_MAP_WIDTH / 4;
+  lightShadowMapViewer.size.height = SHADOW_MAP_HEIGHT / 4;
+  lightShadowMapViewer.update();
 
-  move() {
-    //this.swapColor()
-    this.x += Math.cos(this.a) * this.s;
-    this.y += Math.sin(this.a) * this.s;
-    this.a += Math.random() * 0.8 - 0.4;
+}
 
-    if (this.x < 0 || this.x > this.w - this.radius) {
-      return false;
+function createScene( ) {
+
+  // GROUND
+
+  const geometry = new THREE.PlaneGeometry( 100, 100 );
+  const planeMaterial = new THREE.MeshPhongMaterial( { color: 0xffb851 } );
+
+  const ground = new THREE.Mesh( geometry, planeMaterial );
+
+  ground.position.set( 0, FLOOR, 0 );
+  ground.rotation.x = - Math.PI / 2;
+  ground.scale.set( 100, 100, 100 );
+
+  ground.castShadow = false;
+  ground.receiveShadow = true;
+
+  scene.add( ground );
+
+  // TEXT
+
+  const loader = new FontLoader();
+  loader.load( 'fonts/helvetiker_bold.typeface.json', function ( font ) {
+
+    const textGeo = new TextGeometry( 'smile web master', {
+
+      font: font,
+
+      size: 200,
+      height: 50,
+      curveSegments: 12,
+
+      bevelThickness: 2,
+      bevelSize: 5,
+      bevelEnabled: true
+
+    } );
+
+    textGeo.computeBoundingBox();
+    const centerOffset = - 0.5 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
+
+    const textMaterial = new THREE.MeshPhongMaterial( { color: 0xff0000, specular: 0xffffff } );
+
+    const mesh = new THREE.Mesh( textGeo, textMaterial );
+    mesh.position.x = centerOffset;
+    mesh.position.y = FLOOR + 67;
+
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    scene.add( mesh );
+
+  } );
+
+  // CUBES
+
+  const cubes1 = new THREE.Mesh( new THREE.BoxGeometry( 1500, 220, 150 ), planeMaterial );
+
+  cubes1.position.y = FLOOR - 50;
+  cubes1.position.z = 20;
+
+  cubes1.castShadow = true;
+  cubes1.receiveShadow = true;
+
+  scene.add( cubes1 );
+
+  const cubes2 = new THREE.Mesh( new THREE.BoxGeometry( 1600, 170, 250 ), planeMaterial );
+
+  cubes2.position.y = FLOOR - 50;
+  cubes2.position.z = 20;
+
+  cubes2.castShadow = true;
+  cubes2.receiveShadow = true;
+
+  scene.add( cubes2 );
+
+  // MORPHS
+
+  mixer = new THREE.AnimationMixer( scene );
+
+  function addMorph( mesh, clip, speed, duration, x, y, z, fudgeColor ) {
+
+    mesh = mesh.clone();
+    mesh.material = mesh.material.clone();
+
+    if ( fudgeColor ) {
+
+      mesh.material.color.offsetHSL( 0, Math.random() * 0.5 - 0.25, Math.random() * 0.5 - 0.25 );
+
     }
 
-    if (this.y < 0 || this.y > this.h - this.radius) {
-      return false;
-    }
-    this.render();
-    return true;
-  }}
+    mesh.speed = speed;
 
+    mixer.clipAction( clip, mesh ).
+      setDuration( duration ).
+    // to shift the playback out of phase:
+      startAt( - duration * Math.random() ).
+      play();
 
-function createCanvas(properties) {
-  let canvas = document.createElement('canvas');
-  canvas.width = properties.width;
-  canvas.height = properties.height;
-  let context = canvas.getContext('2d');
-  return {
-    canvas: canvas,
-    context: context };
+    mesh.position.set( x, y, z );
+    mesh.rotation.y = Math.PI / 2;
 
-}
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
 
-function writeText(canvas, context, text) {
-  let size = 100;
-  context.font = size + "px Montserrat";
-  context.fillStyle = "#111111";
-  context.textAlign = "center";
-  let lineheight = 70;
-  let lines = text.split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    context.fillText(lines[i], canvas.width / 2, canvas.height / 2 + lineheight * i - lineheight * (lines.length - 1) / 3);
+    scene.add( mesh );
+
+    morphs.push( mesh );
+
   }
+
+  const gltfloader = new GLTFLoader();
+
+  gltfloader.load( 'models/gltf/Horse.glb', function ( gltf ) {
+
+    const mesh = gltf.scene.children[ 0 ];
+
+    const clip = gltf.animations[ 0 ];
+
+    addMorph( mesh, clip, 550, 1, 100 - Math.random() * 1000, FLOOR, 300, true );
+    addMorph( mesh, clip, 550, 1, 100 - Math.random() * 1000, FLOOR, 450, true );
+    addMorph( mesh, clip, 550, 1, 100 - Math.random() * 1000, FLOOR, 600, true );
+
+    addMorph( mesh, clip, 550, 1, 100 - Math.random() * 1000, FLOOR, - 300, true );
+    addMorph( mesh, clip, 550, 1, 100 - Math.random() * 1000, FLOOR, - 450, true );
+    addMorph( mesh, clip, 550, 1, 100 - Math.random() * 1000, FLOOR, - 600, true );
+
+  } );
+
+  gltfloader.load( 'models/gltf/Flamingo.glb', function ( gltf ) {
+
+    const mesh = gltf.scene.children[ 0 ];
+    const clip = gltf.animations[ 0 ];
+
+    addMorph( mesh, clip, 500, 1, 500 - Math.random() * 500, FLOOR + 350, 40 );
+
+  } );
+
+  gltfloader.load( 'models/gltf/Stork.glb', function ( gltf ) {
+
+    const mesh = gltf.scene.children[ 0 ];
+    const clip = gltf.animations[ 0 ];
+
+    addMorph( mesh, clip, 350, 1, 500 - Math.random() * 500, FLOOR + 350, 340 );
+
+  } );
+
+  gltfloader.load( 'models/gltf/Parrot.glb', function ( gltf ) {
+
+    const mesh = gltf.scene.children[ 0 ];
+    const clip = gltf.animations[ 0 ];
+
+    addMorph( mesh, clip, 450, 0.5, 500 - Math.random() * 500, FLOOR + 300, 700 );
+
+  } );
+
 }
 
-function maskCanvas() {
-  c3.context.drawImage(c2.canvas, 0, 0, c2.canvas.width, c2.canvas.height);
-  c3.context.globalCompositeOperation = 'source-atop';
-  c3.context.drawImage(c1.canvas, 0, 0);
-  blur(c1.context, c1.canvas, 2);
+function animate() {
+
+  requestAnimationFrame( animate );
+
+  render();
+  stats.update();
+
 }
 
-function blur(ctx, canvas, amt) {
-  ctx.filter = `blur(${amt}px)`;
-  ctx.drawImage(canvas, 0, 0);
-  ctx.filter = 'none';
+function render() {
+
+  const delta = clock.getDelta();
+
+  mixer.update( delta );
+
+  for ( let i = 0; i < morphs.length; i ++ ) {
+
+    const morph = morphs[ i ];
+
+    morph.position.x += morph.speed * delta;
+
+    if ( morph.position.x > 2000 ) {
+
+      morph.position.x = - 1000 - Math.random() * 500;
+
+    }
+
+  }
+
+  controls.update( delta );
+
+  renderer.clear();
+  renderer.render( scene, camera );
+
+  // Render debug HUD with shadow map
+
+  if ( showHUD ) {
+
+    lightShadowMapViewer.render( renderer );
+
+  }
+
 }
-
-
-/*
- * Function to clear layer canvas
- * @num:number number of particles
- */
-function popolate() {
-  particles.push(
-  new Particle(canvas, {
-    x: $(window).width() / 2,
-    y: $(window).height() / 2 }));
-
-
-  return particles.length;
-}
-
-function clear() {
-  canvas.globalAlpha = 0.03;
-  canvas.fillStyle = '#111111';
-  canvas.fillRect(0, 0, tela.width, tela.height);
-  canvas.globalAlpha = 1;
-}
-
-function update() {
-  clear();
-  particles = particles.filter(function (p) {
-    return p.move();
-  });
-  maskCanvas();
-  requestAnimationFrame(update.bind(this));
-}
-
-update();

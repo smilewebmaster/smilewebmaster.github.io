@@ -29,7 +29,7 @@
   <link rel="stylesheet" type="text/css" href="assets/css/virtual.css">
   
   <link rel="stylesheet" type="text/css" href="assets/css/topbar.virtual.css">
-  <!-- <link rel="stylesheet" href="assets/css/title.css"> -->
+  <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/3d-card.css">
 </head>
 <body class="theme-red">
@@ -42,7 +42,7 @@
   <!-- Setting button -->
   
   
-  <div class="vg-page page-home" id="home" style="background-image: url(assets/img/bg_image_1.jpg)">
+  <div class="vg-page page-home" id="home" >
     <!-- Navbar -->
     <div class="navbar navbar-expand-lg navbar-dark sticky" data-offset="500">
       <div class="container">
@@ -54,6 +54,9 @@
           <ul class="navbar-nav ml-auto">
             <li class="nav-item active">
               <a href="#home" class="nav-link" data-animate="scrolling">Home</a>
+            </li>
+            <li class="nav-item">
+              <a href="#threejs" class="nav-link" data-animate="scrolling">Threejs</a>
             </li>
             <li class="nav-item">
               <a href="#about" class="nav-link" data-animate="scrolling">About Me</a>
@@ -70,21 +73,11 @@
           </ul>
         </div>
       </div>
-    </div> <!-- End Navbar -->
-    <!-- Caption header -->
-    <!-- <div class="caption-header text-center wow zoomInDown"> -->
-      <!-- <h5 class="fw-normal">Welcome to my website!</h5>
-      <h1 class="fw-light mb-4">I'm <b class="fg-theme">Stephen</b> Doe</h1>
-      <div class="badge">Flexible & Fantastic Developer</div> -->
-      
-    <!-- </div> -->
-    <!-- <div class="title-1">
-      <h3><strong>hao</strong></h3>
-    </div> -->
-    <!-- End Caption header -->
+    </div>
+    <!-- End Navbar -->
     <div class="floating-button"><span class="ti-mouse"></span></div>
   </div>
-  
+  <div class="page-threejs" id="threejs"></div>
   <div class="vg-page page-about" id="about">
     <div class="container py-5">
       <h1 class="text-center fw-normal wow fadeIn">About me</h1>
@@ -629,6 +622,15 @@
   <script src="assets/js/topbar-virtual.js"></script>
 
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIA_zqjFMsJM_sxP9-6Pde5vVCTyJmUHM&callback=initMap"></script>
-  <script  src="assets/js/title.js"></script>
+  <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "node_modules/three/build/js/build/three.module.js",
+          "three/addons/": "node_modules/three/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="assets/js/title.js"></script>
 </body>
 </html>

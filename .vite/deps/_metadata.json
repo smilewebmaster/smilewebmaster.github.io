@@ -1,0 +1,53 @@
+{
+  "hash": "ef69dc0b",
+  "browserHash": "008dabe2",
+  "optimized": {
+    "three": {
+      "src": "../../node_modules/three/build/three.module.js",
+      "file": "three.js",
+      "fileHash": "9bd0a8a3",
+      "needsInterop": false
+    },
+    "three/addons/controls/FirstPersonControls.js": {
+      "src": "../../node_modules/three/examples/jsm/controls/FirstPersonControls.js",
+      "file": "three_addons_controls_FirstPersonControls__js.js",
+      "fileHash": "4ebb120c",
+      "needsInterop": false
+    },
+    "three/addons/geometries/TextGeometry.js": {
+      "src": "../../node_modules/three/examples/jsm/geometries/TextGeometry.js",
+      "file": "three_addons_geometries_TextGeometry__js.js",
+      "fileHash": "b8f9f3b0",
+      "needsInterop": false
+    },
+    "three/addons/libs/stats.module.js": {
+      "src": "../../node_modules/three/examples/jsm/libs/stats.module.js",
+      "file": "three_addons_libs_stats__module__js.js",
+      "fileHash": "83c778fc",
+      "needsInterop": false
+    },
+    "three/addons/loaders/FontLoader.js": {
+      "src": "../../node_modules/three/examples/jsm/loaders/FontLoader.js",
+      "file": "three_addons_loaders_FontLoader__js.js",
+      "fileHash": "2ac91f98",
+      "needsInterop": false
+    },
+    "three/addons/loaders/GLTFLoader.js": {
+      "src": "../../node_modules/three/examples/jsm/loaders/GLTFLoader.js",
+      "file": "three_addons_loaders_GLTFLoader__js.js",
+      "fileHash": "5d5860fc",
+      "needsInterop": false
+    },
+    "three/addons/utils/ShadowMapViewer.js": {
+      "src": "../../node_modules/three/examples/jsm/utils/ShadowMapViewer.js",
+      "file": "three_addons_utils_ShadowMapViewer__js.js",
+      "fileHash": "65f24c80",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-Z2GM3ZTV": {
+      "file": "chunk-Z2GM3ZTV.js"
+    }
+  }
+}
